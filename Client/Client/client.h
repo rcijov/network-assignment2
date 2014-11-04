@@ -11,9 +11,6 @@
 #include <time.h>
 #include "client.h"
 
-#define STIMER 0
-#define UTIMER 300000
-
 #define PORT1 5000
 #define PORT2 7000
 
