@@ -1,0 +1,13 @@
+Server: received handshake C39
+Server: user "d" on host "dada" requests GET file: "test.txt"
+Server: sent handshake C39 S91
+Server: received handshake C39 S91
+Sender started on host dada
+Sender: sent frame 1
+Sender: received ACK 1
+Sender: file transfer complete
+Sender: number of packets sent: 1
+Sender: number of packets sent (needed): 1
+Sender: number of bytes sent: 272
+Sender: number of bytes read: 8
+

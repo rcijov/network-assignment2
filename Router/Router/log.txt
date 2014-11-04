@@ -1,0 +1,13 @@
+Peer host 1: dada
+Peer host 2: dada
+Damage Rate: 0
+Router: Receive packet 0 from peer host 1
+Router: Send packet 0 received from peer host 1 to host 2
+Router: Receive packet 0 from peer host 2
+Router: Send packet 0 received from peer host 2 to host 1
+Router: Receive packet 1 from peer host 1
+Router: Send packet 1 received from peer host 1 to host 2
+Router: Receive packet 1 from peer host 2
+Router: Send packet 1 received from peer host 2 to host 1
+Router: Receive packet 2 from peer host 1
+Router: Send packet 2 received from peer host 1 to host 2
