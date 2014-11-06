@@ -1,7 +1,7 @@
-Server: received handshake C39
+Server: received handshake C162
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C39 S91
-Server: received handshake C39 S91
+Server: sent handshake C162 S191
+Server: received handshake C162 S191
 Sender started on host dada
 Sender: sent frame 1
 Sender: received ACK 1

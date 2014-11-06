@@ -25,7 +25,7 @@
 #define MAX_FRAME_SIZE 256
 #define SEQUENCE_WIDTH 1
 
-typedef enum { GET = 1, PUT } Direction;
+typedef enum { GET = 1, PUT, LIST } Direction;
 typedef enum { TIMEOUT = 1, INCOMING_PACKET, RECEIVE_ERROR } ReceiveResult;
 typedef enum { CLIENT_REQ = 1, ACK_CLIENT_NUM, ACK_SERVER_NUM, FILE_NOT_EXIST, INVALID } HandshakeType;
 typedef enum { INITIAL_DATA = 1, DATA, FINAL_DATA } MessageFrameHeader;

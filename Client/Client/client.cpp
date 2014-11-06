@@ -182,6 +182,98 @@ bool putFile(int sock, char * filename, char * sending_hostname, int server_numb
 	}
 }
 
+bool getList(int sock, char * filename, char * receiving_hostname, int client_number)
+{
+	MessageFrame frame;
+	Acknowledgment ack; ack.packet_type = FRAME_ACK;
+	long byte_count = 0;
+	int packetsSent = 0, packetsSentNeeded = 0;
+	int bytes_received = 0, bytes_written = 0, bytes_written_total = 0;
+	int sequence_number = client_number % 2;
+
+	fout << "Receiver started on host " << receiving_hostname << endl;
+
+	cout << "List of Files" << endl;
+
+	FILE * stream = fopen(filename, "w+b");
+
+	if (stream != NULL)
+	{
+		while (1)
+		{
+			while (Receive(sock, nullptr, &frame) != INCOMING_PACKET) { ; }
+
+			bytes_received += sizeof(frame);
+
+			if (frame.packet_type == HANDSHAKE)
+			{
+				fout << "Receiver: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+				if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
+					err_sys("Error in sending packet.");
+				fout << "Receiver: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+			}
+			else if (frame.packet_type == FRAME)
+			{
+				fout << "Receiver: received frame " << (int)frame.snwseq << endl;
+
+				if ((int)frame.snwseq != sequence_number)
+				{
+					ack.number = (int)frame.snwseq;
+					if (SendFileAck(sock, &ack) != sizeof(ack))
+						return false;
+					packetsSent++;
+					fout << "Receiver: sent ACK " << ack.number << " again" << endl;
+				}
+				else
+				{
+					ack.number = (int)frame.snwseq;
+					if (SendFileAck(sock, &ack) != sizeof(ack))
+						return false;
+					fout << "Receiver: sent ACK " << ack.number << endl;
+					packetsSent++;
+					packetsSentNeeded++;
+
+					byte_count = frame.buffer_length;
+					bytes_written = fwrite(frame.buffer, sizeof(char), byte_count, stream);
+					bytes_written_total += bytes_written;
+
+					int i;
+					for (i = 0; i < byte_count; i++)
+					{
+						cout << frame.buffer[i];
+					}
+					cout << endl;
+
+					sequence_number = (sequence_number == 0 ? 1 : 0);
+
+					if (frame.header == FINAL_DATA)
+						break;
+				}
+			}
+		}
+		cout << endl;
+		fclose(stream);
+		cout << "Receiver: file transfer complete" << endl;
+		cout << "Receiver: number of packets sent: " << packetsSent << endl;
+		cout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
+		cout << "Receiver: number of bytes received: " << bytes_received << endl;
+		cout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
+		//output
+		fout << "Receiver: file transfer complete" << endl;
+		fout << "Receiver: number of packets sent: " << packetsSent << endl;
+		fout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
+		fout << "Receiver: number of bytes received: " << bytes_received << endl;
+		fout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
+		return true;
+	}
+	else
+	{
+		cout << "Receiver: problem opening the file." << endl;
+		fout << "Receiver: problem opening the file." << endl;
+		return false;
+	}
+}
+
 bool getFile(int sock, char * filename, char * receiving_hostname, int client_number)
 {
 	MessageFrame frame;
@@ -301,6 +393,10 @@ void control(Direction direction, char * hostname)
 		if (!putFile(sock, handshake.filename, hostname, handshake.server_number))
 			err_sys("An error occurred while sending the file.");
 		break;
+	case LIST:
+		if (!getList(sock, handshake.filename, hostname, handshake.server_number))
+			err_sys("An error occurred while sending the file.");
+		break;
 	default:
 		break;
 	}
@@ -325,10 +421,8 @@ void run()
 	if (gethostname(hostname, (int)HOSTNAME_LENGTH) != 0)
 		err_sys("Cannot get the host name");
 
-	printf("=========== ftpd_client v0.2 ===========\n");
 	printf("User [%s] started client on host [%s]\n", username, hostname);
-	printf("To quit, type \"quit\" as server name.\n");
-	printf("========================================\n\n");
+	printf("To quit, type \"quit\" as server name.\n\n");
 
 	while (true)
 	{
@@ -380,6 +474,10 @@ void run()
 					err_sys("File does not exist on client side.");
 				else
 					handshake.direction = PUT;
+			}
+			else if (strcmp(direction, "list") == 0)
+			{
+				handshake.direction = LIST;
 			}
 			else
 				err_sys("Invalid direction. Use \"get\" or \"put\".");

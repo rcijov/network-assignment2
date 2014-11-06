@@ -47,7 +47,7 @@ int SendFileAck(int sock, Acknowledgment * ack)
 	return(sendto(sock, (const char*)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, sizeof(sa_in)));
 }
 
-ReceiveResult ReceiveFrame(int sock, MessageFrame * ptr_message_frame)
+ReceiveResult Receive(int sock, Acknowledgment * ack, MessageFrame * frame)
 {
 	fd_set readfds;
 	FD_ZERO(&readfds);
@@ -59,33 +59,20 @@ ReceiveResult ReceiveFrame(int sock, MessageFrame * ptr_message_frame)
 	case 0:
 		return TIMEOUT; break;
 	case 1:
-		bytes_recvd = recvfrom(sock, (char *)ptr_message_frame, sizeof(*ptr_message_frame), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		if (ack != nullptr)
+		{
+			bytes_recvd = recvfrom(sock, (char *)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		}
+		else if (frame != nullptr){
+			bytes_recvd = recvfrom(sock, (char *)frame, sizeof(*frame), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		}
 		return INCOMING_PACKET; break;
 	default:
 		return RECEIVE_ERROR; break;
 	}
 }
 
-ReceiveResult ReceiveFileAck(int sock, Acknowledgment * ack)
-{
-	fd_set readfds;
-	FD_ZERO(&readfds);
-	FD_SET(sock, &readfds);
-	int bytes_recvd;
-	int outfds = select(1, &readfds, NULL, NULL, &timeouts);
-	switch (outfds)
-	{
-	case 0:
-		return TIMEOUT; break;
-	case 1:
-		bytes_recvd = recvfrom(sock, (char *)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, &sa_in_size);
-		return INCOMING_PACKET; break;
-	default:
-		return RECEIVE_ERROR; break;
-	}
-}
-
-bool SendFile(int sock, char * filename, char * sending_hostname, int client_number)
+bool putFile(int sock, char * filename, char * sending_hostname, int client_number)
 {
 	MessageFrame frame; frame.packet_type = FRAME;
 	Acknowledgment ack; ack.number = -1;
@@ -143,7 +130,7 @@ bool SendFile(int sock, char * filename, char * sending_hostname, int client_num
 					break;
 				}
 
-			} while (ReceiveFileAck(sock, &ack) != INCOMING_PACKET || ack.number != sequence_number);
+			} while (Receive(sock, &ack, nullptr) != INCOMING_PACKET || ack.number != sequence_number);
 
 			if (bMaxAttempts)
 			{
@@ -188,7 +175,109 @@ bool SendFile(int sock, char * filename, char * sending_hostname, int client_num
 	}
 }
 
-bool ReceiveFile(int sock, char * filename, char * receiving_hostname, int server_number)
+bool getList(int sock, char * filename, char * sending_hostname, int client_number)
+{
+	MessageFrame frame; frame.packet_type = FRAME;
+	Acknowledgment ack; ack.number = -1;
+	long bytes_counter = 0, byte_count = 0;
+	int bytes_sent = 0, bytes_read = 0, bytes_read_total = 0;
+	int packetsSent = 0, packetsSentNeeded = 0;
+	bool bFirstPacket = true, bFinished = false;
+	int sequence_number = client_number % 2;
+	int nTries; bool bMaxAttempts = false;
+
+	fout << "Sender started on host " << sending_hostname << endl;
+
+	FILE * stream = fopen(filename, "r+b");
+
+	if (stream != NULL)
+	{
+		bytes_counter = GetFileSize(filename);
+		while (1)
+		{
+			if (bytes_counter > MAX_FRAME_SIZE)
+			{
+				frame.header = (bFirstPacket ? INITIAL_DATA : DATA);
+				byte_count = MAX_FRAME_SIZE;
+			}
+			else
+			{
+				byte_count = bytes_counter;
+				bFinished = true;
+				frame.header = FINAL_DATA;
+			}
+
+			bytes_counter -= MAX_FRAME_SIZE;
+
+			bytes_read = fread(frame.buffer, sizeof(char), byte_count, stream);
+			bytes_read_total += bytes_read;
+			frame.buffer_length = byte_count;
+			frame.snwseq = sequence_number;
+
+			nTries = 0;
+			do {
+				nTries++;
+				if (SendFrame(sock, &frame) != sizeof(frame))
+					return false;
+				packetsSent++;
+				if (nTries == 1)
+					packetsSentNeeded++;
+				bytes_sent += sizeof(frame);
+
+				cout << "Sender: sent frame " << sequence_number << endl;
+				fout << "Sender: sent frame " << sequence_number << endl;
+
+				if (bFinished && (nTries > MAX_RETRIES))
+				{
+					bMaxAttempts = true;
+					break;
+				}
+
+			} while (Receive(sock, &ack, nullptr) != INCOMING_PACKET || ack.number != sequence_number);
+
+			if (bMaxAttempts)
+			{
+				cout << "Sender: did not receive ACK " << sequence_number << " after " << MAX_RETRIES << " tries. Transfer finished." << endl;
+				fout << "Sender: did not receive ACK " << sequence_number << " after " << MAX_RETRIES << " tries. Transfer finished." << endl;
+			}
+			else
+			{
+				cout << "Sender: received ACK " << ack.number << endl;
+				fout << "Sender: received ACK " << ack.number << endl;
+			}
+
+			bFirstPacket = false;
+
+			sequence_number = (sequence_number == 0 ? 1 : 0);
+
+			if (bFinished)
+				break;
+		}
+
+		fclose(stream);
+		cout << "Sender: file transfer complete" << endl;
+		cout << "Sender: number of packets sent: " << packetsSent << endl;
+		cout << "Sender: number of packets sent (needed): " << packetsSentNeeded << endl;
+		cout << "Sender: number of bytes sent: " << bytes_sent << endl;
+		cout << "Sender: number of bytes read: " << bytes_read_total << endl << endl;
+
+		// output
+		fout << "Sender: file transfer complete" << endl;
+		fout << "Sender: number of packets sent: " << packetsSent << endl;
+		fout << "Sender: number of packets sent (needed): " << packetsSentNeeded << endl;
+		fout << "Sender: number of bytes sent: " << bytes_sent << endl;
+		fout << "Sender: number of bytes read: " << bytes_read_total << endl << endl;
+
+		return true;
+	}
+	else
+	{
+		cout << "Sender: problem opening the file." << endl;
+		fout << "Sender: problem opening the file." << endl;
+		return false;
+	}
+}
+bool getFile(int sock, char * filename, char * receiving_hostname, int server_number)
 {
 	MessageFrame frame;
 	Acknowledgment ack; ack.packet_type = FRAME_ACK;
@@ -205,7 +294,7 @@ bool ReceiveFile(int sock, char * filename, char * receiving_hostname, int serve
 	{
 		while (1)
 		{
-			while (ReceiveFrame(sock, &frame) != INCOMING_PACKET) { ; }
+			while (Receive(sock, nullptr, &frame) != INCOMING_PACKET) { ; }
 
 			bytes_received += sizeof(frame);
 
@@ -293,17 +382,22 @@ ReceiveResult ReceiveResponse(int sock, Handshake * ptr_handshake)
 	}
 }
 
-void direction(Direction direction)
+void control(Direction direction)
 {
 	switch (direction)
 	{
 	case GET:
-		if (!SendFile(sock, handshake.filename, server_name, handshake.client_number))
+		if (!putFile(sock, handshake.filename, server_name, handshake.client_number))
 			err_sys("An error occurred while sending the file.");
 		break;
 
 	case PUT:
-		if (!ReceiveFile(sock, handshake.filename, server_name, handshake.server_number))
+		if (!getFile(sock, handshake.filename, server_name, handshake.server_number))
+			err_sys("An error occurred while receiving the file.");
+		break;
+
+	case LIST:
+		if (!getList(sock, handshake.filename, server_name, handshake.server_number))
 			err_sys("An error occurred while receiving the file.");
 		break;
 
@@ -323,10 +417,9 @@ void run()
 	if (gethostname(server_name, HOSTNAME_LENGTH) != 0)
 		err_sys("Server gethostname() error.");
 
-	printf("=========== ftpd_server v0.2 ===========\n");
 	printf("Server started on host [%s]\n", server_name);
 	printf("Awaiting request for file transfer...\n", server_name);
-	printf("========================================\n\n");
+	printf("\n\n");
 
 	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		err_sys("socket() failed");
@@ -367,6 +460,20 @@ void run()
 			fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests PUT file: \"" << handshake.filename << "\"" << endl;
 			handshake.type = ACK_CLIENT_NUM;
 		}
+		else if(handshake.direction == LIST)
+		{
+			cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
+			fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
+
+			if (FileExists(handshake.filename))
+				handshake.type = ACK_CLIENT_NUM;
+			else
+			{
+				handshake.type = FILE_NOT_EXIST;
+				cout << "Server: requested file does not exist." << endl;
+				fout << "Server: requested file does not exist." << endl;
+			}
+		}
 		else
 		{
 			handshake.type = INVALID;
@@ -402,7 +509,7 @@ void run()
 
 			if (handshake.type == ACK_SERVER_NUM)
 			{
-				direction(handshake.direction);
+				control(handshake.direction);
 			}
 			else
 			{
