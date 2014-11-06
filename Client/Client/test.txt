@@ -1,1 +1,13 @@
-dadadada
+.
+..
+Debug
+download.jpg
+Files
+Headers
+List
+server.cpp
+server.h
+Server.vcxproj
+Server.vcxproj.filters
+server_log.txt
+test.txt

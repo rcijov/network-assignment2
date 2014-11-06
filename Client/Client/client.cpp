@@ -3,10 +3,8 @@ using namespace std;
 
 bool FileExists(char * filename)
 {
-	int result;
-	struct _stat stat_buf;
-	result = _stat(filename, &stat_buf);
-	return (result == 0);
+	std::ifstream infile(filename);
+	return infile.good();
 }
 
 void err_sys(char * fmt, ...)
@@ -445,7 +443,11 @@ void run()
 		if (strncmp(direction, "quit", 4) == 0)
 			break;
 
-		cout << "Enter file name   : "; cin >> filename; cout << endl;
+		if (!strncmp(direction, "list", 4) == 0)
+		{
+			cout << "Enter file name   : "; cin >> filename; cout << endl;
+		}
+
 		cout << "Enter router host : "; cin >> remotehost;
 
 		strcpy(handshake.hostname, hostname);

@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <process.h>
+#include "Headers\dirent.h"
 
 #define STIMER 0
 #define UTIMER 300000

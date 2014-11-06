@@ -3,10 +3,8 @@ using namespace std;
 
 bool FileExists(char * filename)
 {
-	int result;
-	struct _stat stat_buf;
-	result = _stat(filename, &stat_buf);
-	return (result == 0);
+	std::ifstream infile(filename);
+	return infile.good();
 }
 
 long GetFileSize(char * filename)
@@ -175,7 +173,29 @@ bool putFile(int sock, char * filename, char * sending_hostname, int client_numb
 	}
 }
 
-bool getList(int sock, char * filename, char * sending_hostname, int client_number)
+void createList()
+{
+	DIR *mydir = opendir(".");
+
+	struct dirent *entry = NULL;
+	char files[1028] = "";
+
+	while ((entry = readdir(mydir)))
+	{
+		strcat(entry->d_name, "\r\n");
+		strcat(files, entry->d_name);
+	}
+
+	closedir(mydir);
+
+	FILE *file = fopen("List/list.txt", "w");
+
+	int results = fputs(files, file);
+	if (results == EOF) { fout << "Error writing the list file"; }
+	fclose(file);
+}
+
+bool getList(int sock, char * sending_hostname, int client_number)
 {
 	MessageFrame frame; frame.packet_type = FRAME;
 	Acknowledgment ack; ack.number = -1;
@@ -188,11 +208,13 @@ bool getList(int sock, char * filename, char * sending_hostname, int client_numb
 
 	fout << "Sender started on host " << sending_hostname << endl;
 
-	FILE * stream = fopen(filename, "r+b");
+	createList();
+
+	FILE * stream = fopen("List/list.txt", "r+b");
 
 	if (stream != NULL)
 	{
-		bytes_counter = GetFileSize(filename);
+		bytes_counter = GetFileSize("List/list.txt");
 		while (1)
 		{
 			if (bytes_counter > MAX_FRAME_SIZE)
@@ -397,7 +419,7 @@ void control(Direction direction)
 		break;
 
 	case LIST:
-		if (!getList(sock, handshake.filename, server_name, handshake.server_number))
+		if (!getList(sock, server_name, handshake.server_number))
 			err_sys("An error occurred while receiving the file.");
 		break;
 
@@ -465,14 +487,7 @@ void run()
 			cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
 			fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
 
-			if (FileExists(handshake.filename))
-				handshake.type = ACK_CLIENT_NUM;
-			else
-			{
-				handshake.type = FILE_NOT_EXIST;
-				cout << "Server: requested file does not exist." << endl;
-				fout << "Server: requested file does not exist." << endl;
-			}
+			handshake.type = ACK_CLIENT_NUM;
 		}
 		else
 		{
