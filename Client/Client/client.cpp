@@ -20,14 +20,6 @@ void err_sys(char * fmt, ...)
 	exit(1);
 }
 
-unsigned long ResolveName(char name[])
-{
-	struct hostent *host;
-	if ((host = gethostbyname(name)) == NULL)
-		err_sys("gethostbyname() failed");
-	return *((unsigned long *)host->h_addr_list[0]);
-}
-
 long GetFileSize(char * filename)
 {
 	int result;
@@ -35,6 +27,25 @@ long GetFileSize(char * filename)
 	result = _stat(filename, &stat_buf);
 	if (result != 0) return 0;
 	return stat_buf.st_size;
+}
+
+ReceiveResult ReceiveFileAck(int sock, Acknowledgment * ack)
+{
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(sock, &readfds);
+	int bytes_recvd;
+	int outfds = select(1, &readfds, NULL, NULL, &timeouts);
+	switch (outfds)
+	{
+	case 0:
+		return TIMEOUT; break;
+	case 1:
+		bytes_recvd = recvfrom(sock, (char *)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		return INCOMING_PACKET; break;
+	default:
+		return RECEIVE_ERROR; break;
+	}
 }
 
 int SendRequest(int sock, ThreeWayHandshake * ptr_handshake, struct sockaddr_in * sa_in)
@@ -52,7 +63,8 @@ int SendFileAck(int sock, Acknowledgment * ack)
 	return sendto(sock, (const char*)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, sizeof(sa_in));
 }
 
-ReceiveResult Receive(int sock, Acknowledgment * ack, MessageFrame * ptr_message_frame)
+
+ReceiveResult ReceiveFrame(int sock, MessageFrame * ptr_message_frame)
 {
 	fd_set readfds;
 	FD_ZERO(&readfds);
@@ -64,20 +76,14 @@ ReceiveResult Receive(int sock, Acknowledgment * ack, MessageFrame * ptr_message
 	case 0:
 		return TIMEOUT; break;
 	case 1:
-		if (ack != nullptr)
-		{
-			bytes_recvd = recvfrom(sock, (char *)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, &sa_in_size);
-		}
-		else if (ptr_message_frame != nullptr){
-			bytes_recvd = recvfrom(sock, (char *)ptr_message_frame, sizeof(*ptr_message_frame), 0, (struct sockaddr*)&sa_in, &sa_in_size);
-		}
+		bytes_recvd = recvfrom(sock, (char *)ptr_message_frame, sizeof(*ptr_message_frame), 0, (struct sockaddr*)&sa_in, &sa_in_size);
 		return INCOMING_PACKET; break;
 	default:
 		return RECEIVE_ERROR; break;
 	}
 }
 
-bool putFile(int sock, char * filename, char * sending_hostname, int server_number)
+bool SendFile(int sock, char * filename, char * sending_hostname, int server_number)
 {
 	MessageFrame frame; frame.packet_type = FRAME;
 	Acknowledgment ack; ack.number = -1;
@@ -127,7 +133,7 @@ bool putFile(int sock, char * filename, char * sending_hostname, int server_numb
 				bytes_sent += sizeof(frame);
 
 				cout << "Sender: sent frame " << sequence_number << endl;
-				fout << "Sender started on host " << sending_hostname << endl;
+				fout << "Sender: sent frame " << sequence_number << endl;
 
 				if (bFinished && (nTries > MAX_RETRIES))
 				{
@@ -135,7 +141,7 @@ bool putFile(int sock, char * filename, char * sending_hostname, int server_numb
 					break;
 				}
 
-			} while (Receive(sock, &ack, nullptr) != INCOMING_PACKET || ack.number != sequence_number);
+			} while (ReceiveFileAck(sock, &ack) != INCOMING_PACKET || ack.number != sequence_number);
 
 			if (bMaxAttempts)
 			{
@@ -162,8 +168,7 @@ bool putFile(int sock, char * filename, char * sending_hostname, int server_numb
 		cout << "Sender: number of packets sent (needed): " << packetsSentNeeded << endl;
 		cout << "Sender: number of bytes sent: " << bytes_sent << endl;
 		cout << "Sender: number of bytes read: " << bytes_read_total << endl << endl;
-		
-		//output
+
 		fout << "Sender: file transfer complete" << endl;
 		fout << "Sender: number of packets sent: " << packetsSent << endl;
 		fout << "Sender: number of packets sent (needed): " << packetsSentNeeded << endl;
@@ -180,99 +185,7 @@ bool putFile(int sock, char * filename, char * sending_hostname, int server_numb
 	}
 }
 
-bool getList(int sock, char * filename, char * receiving_hostname, int client_number)
-{
-	MessageFrame frame;
-	Acknowledgment ack; ack.packet_type = FRAME_ACK;
-	long byte_count = 0;
-	int packetsSent = 0, packetsSentNeeded = 0;
-	int bytes_received = 0, bytes_written = 0, bytes_written_total = 0;
-	int sequence_number = client_number % 2;
-
-	fout << "Receiver started on host " << receiving_hostname << endl;
-
-	cout << "List of Files" << endl;
-
-	FILE * stream = fopen(filename, "w+b");
-
-	if (stream != NULL)
-	{
-		while (1)
-		{
-			while (Receive(sock, nullptr, &frame) != INCOMING_PACKET) { ; }
-
-			bytes_received += sizeof(frame);
-
-			if (frame.packet_type == HANDSHAKE)
-			{
-				fout << "Receiver: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-				if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
-					err_sys("Error in sending packet.");
-				fout << "Receiver: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-			}
-			else if (frame.packet_type == FRAME)
-			{
-				fout << "Receiver: received frame " << (int)frame.snwseq << endl;
-
-				if ((int)frame.snwseq != sequence_number)
-				{
-					ack.number = (int)frame.snwseq;
-					if (SendFileAck(sock, &ack) != sizeof(ack))
-						return false;
-					packetsSent++;
-					fout << "Receiver: sent ACK " << ack.number << " again" << endl;
-				}
-				else
-				{
-					ack.number = (int)frame.snwseq;
-					if (SendFileAck(sock, &ack) != sizeof(ack))
-						return false;
-					fout << "Receiver: sent ACK " << ack.number << endl;
-					packetsSent++;
-					packetsSentNeeded++;
-
-					byte_count = frame.buffer_length;
-					bytes_written = fwrite(frame.buffer, sizeof(char), byte_count, stream);
-					bytes_written_total += bytes_written;
-
-					int i;
-					for (i = 0; i < byte_count; i++)
-					{
-						cout << frame.buffer[i];
-					}
-					cout << endl;
-
-					sequence_number = (sequence_number == 0 ? 1 : 0);
-
-					if (frame.header == FINAL_DATA)
-						break;
-				}
-			}
-		}
-		cout << endl;
-		fclose(stream);
-		cout << "Receiver: file transfer complete" << endl;
-		cout << "Receiver: number of packets sent: " << packetsSent << endl;
-		cout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
-		cout << "Receiver: number of bytes received: " << bytes_received << endl;
-		cout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
-		//output
-		fout << "Receiver: file transfer complete" << endl;
-		fout << "Receiver: number of packets sent: " << packetsSent << endl;
-		fout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
-		fout << "Receiver: number of bytes received: " << bytes_received << endl;
-		fout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
-		return true;
-	}
-	else
-	{
-		cout << "Receiver: problem opening the file." << endl;
-		fout << "Receiver: problem opening the file." << endl;
-		return false;
-	}
-}
-
-bool getFile(int sock, char * filename, char * receiving_hostname, int client_number)
+bool ReceiveFile(int sock, char * filename, char * receiving_hostname, int client_number, bool list)
 {
 	MessageFrame frame;
 	Acknowledgment ack; ack.packet_type = FRAME_ACK;
@@ -289,7 +202,7 @@ bool getFile(int sock, char * filename, char * receiving_hostname, int client_nu
 	{
 		while (1)
 		{
-			while (Receive(sock, nullptr, &frame) != INCOMING_PACKET) { ; }
+			while (ReceiveFrame(sock, &frame) != INCOMING_PACKET) { ; }
 
 			bytes_received += sizeof(frame);
 
@@ -300,7 +213,7 @@ bool getFile(int sock, char * filename, char * receiving_hostname, int client_nu
 				if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
 					err_sys("Error in sending packet.");
 				cout << "Receiver: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-				fout << "Receiver: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+				fout << "Receiver: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl; 
 			}
 			else if (frame.packet_type == FRAME)
 			{
@@ -330,6 +243,16 @@ bool getFile(int sock, char * filename, char * receiving_hostname, int client_nu
 					bytes_written = fwrite(frame.buffer, sizeof(char), byte_count, stream);
 					bytes_written_total += bytes_written;
 
+					if (list)
+					{
+						int i;
+						for (i = 0; i < frame.buffer_length; i++)
+						{
+							cout << frame.buffer[i];
+						}
+					}
+					cout << endl;
+
 					sequence_number = (sequence_number == 0 ? 1 : 0);
 
 					if (frame.header == FINAL_DATA)
@@ -338,18 +261,20 @@ bool getFile(int sock, char * filename, char * receiving_hostname, int client_nu
 			}
 		}
 
-		fclose(stream);
-		cout << "Receiver: file transfer complete" << endl;
-		cout << "Receiver: number of packets sent: " << packetsSent << endl;
-		cout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
-		cout << "Receiver: number of bytes received: " << bytes_received << endl;
-		cout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
-		//output
-		fout << "Receiver: file transfer complete" << endl;
-		fout << "Receiver: number of packets sent: " << packetsSent << endl;
-		fout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
-		fout << "Receiver: number of bytes received: " << bytes_received << endl;
-		fout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
+			fclose(stream);
+			cout << "Receiver: file transfer complete" << endl;
+			cout << "Receiver: number of packets sent: " << packetsSent << endl;
+			cout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
+			cout << "Receiver: number of bytes received: " << bytes_received << endl;
+			cout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
+
+
+			fout << "Receiver: file transfer complete" << endl;
+			fout << "Receiver: number of packets sent: " << packetsSent << endl;
+			fout << "Receiver: number of packets sent (needed): " << packetsSentNeeded << endl;
+			fout << "Receiver: number of bytes received: " << bytes_received << endl;
+			fout << "Receiver: number of bytes written: " << bytes_written_total << endl << endl;
+		
 		return true;
 	}
 	else
@@ -379,33 +304,12 @@ ReceiveResult ReceiveResponse(int sock, ThreeWayHandshake * ptr_handshake)
 	}
 }
 
-void control(Direction direction, char * hostname)
-{
-	switch (direction)
-	{
-	case GET:
-		if (!getFile(sock, handshake.filename, hostname, handshake.client_number))
-			err_sys("An error occurred while receiving the file.");
-		break;
-	case PUT:
-		if (!putFile(sock, handshake.filename, hostname, handshake.server_number))
-			err_sys("An error occurred while sending the file.");
-		break;
-	case LIST:
-		if (!getList(sock, handshake.filename, hostname, handshake.server_number))
-			err_sys("An error occurred while sending the file.");
-		break;
-	default:
-		break;
-	}
-}
-
 void run()
 {
 	char server[INPUT_LENGTH]; char filename[INPUT_LENGTH]; char direction[INPUT_LENGTH];
 	char hostname[HOSTNAME_LENGTH]; char username[USERNAME_LENGTH]; char remotehost[HOSTNAME_LENGTH];
 	unsigned long filename_length = (unsigned long)FILENAME_LENGTH;
-	bool flag = true;
+	bool bContinue = true;
 
 	if (WSAStartup(0x0202, &wsadata) != 0)
 	{
@@ -419,8 +323,12 @@ void run()
 	if (gethostname(hostname, (int)HOSTNAME_LENGTH) != 0)
 		err_sys("Cannot get the host name");
 
+	printf("=========== ftpd_client v0.2 ===========\n");
 	printf("User [%s] started client on host [%s]\n", username, hostname);
-	printf("To quit, type \"quit\" as server name.\n\n");
+	printf("To quit, type \"quit\" as server name.\n");
+	printf("========================================\n\n");
+
+
 
 	while (true)
 	{
@@ -454,7 +362,7 @@ void run()
 		strcpy(handshake.username, username);
 		strcpy(handshake.filename, filename);
 
-		if (flag)
+		if (bContinue)
 		{
 			struct hostent *rp;
 			rp = gethostbyname(remotehost);
@@ -518,13 +426,38 @@ void run()
 				cout << "Client: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
 				fout << "Client: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
 
-				control(handshake.direction,hostname);
+				switch (handshake.direction)
+				{
+				case GET:
+					if (!ReceiveFile(sock, handshake.filename, hostname, handshake.client_number,false))
+						err_sys("An error occurred while receiving the file.");
+					break;
+				case PUT:
+					if (!SendFile(sock, handshake.filename, hostname, handshake.server_number))
+						err_sys("An error occurred while sending the file.");
+					break;
+				case LIST:
+					strcpy(handshake.filename, "List/list.txt");
+					if (!ReceiveFile(sock, handshake.filename, hostname, handshake.client_number,true))
+						err_sys("An error occurred while receiving the file.");
+					break;
+				default:
+					break;
+				}
 			}
 		}
 		cout << "Closing client socket." << endl;
 		fout << "Closing client socket." << endl;
 		closesocket(sock);
 	}
+}
+
+unsigned long ResolveName(char name[])
+{
+	struct hostent *host;
+	if ((host = gethostbyname(name)) == NULL)
+		err_sys("gethostbyname() failed");
+	return *((unsigned long *)host->h_addr_list[0]);
 }
 
 int main(int argc, char* argv[])
