@@ -40,7 +40,7 @@ typedef struct {
 	unsigned int snwseq : SEQUENCE_WIDTH;
 	int buffer_length;
 	char buffer[MAX_FRAME_SIZE];
-} MessageFrame;
+} Frame;
 
 typedef struct {
 	PacketType packet_type;
@@ -58,7 +58,7 @@ struct sockaddr_in sa;
 struct sockaddr_in sa_in;
 int sa_in_size;
 struct timeval timeouts;
-ThreeWayHandshake handshake;
+Handshake handshake;
 int random;
 WSADATA wsadata;
 std::ofstream fout;

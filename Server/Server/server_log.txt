@@ -1,7 +1,7 @@
-Server: received handshake C142
+Server: received handshake C88
 Server: user "d" on host "dada" requests GET file: ""
-Server: sent handshake C142 S177
-Server: received handshake C142 S177
+Server: sent handshake C88 S137
+Server: received handshake C88 S137
 Sender started on host dada
 Sender: sent frame 0
 Sender: received ACK 0
@@ -11,10 +11,10 @@ Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 161
 
-Server: received handshake C177
+Server: received handshake C137
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C177 S191
-Server: received handshake C177 S191
+Server: sent handshake C137 S147
+Server: received handshake C137 S147
 Sender started on host dada
 Sender: sent frame 1
 Sender: received ACK 1
@@ -24,36 +24,23 @@ Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 0
 
-Server: received handshake C191
+Server: received handshake C147
 Server: user "d" on host "dada" requests PUT file: "test.txt"
-Server: sent handshake C191 S200
-Server: received handshake C191 S200
+Server: sent handshake C147 S157
+Server: received handshake C147 S157
 Receiver started on host dada
-Receiver: received frame 0
-Receiver: sent ack 0
+Receiver: received frame 1
+Receiver: sent ack 1
 Receiver: file transfer complete
 Receiver: number of packets sent: 1
 Receiver: number of packets sent (needed): 1
 Receiver: number of bytes received: 272
 Receiver: number of bytes written: 0
 
-Server: received handshake C200
+Server: received handshake C160
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C200 S204
-Server: received handshake C200 S204
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 161
-
-Server: received handshake C204
-Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C204 S210
-Server: received handshake C204 S210
+Server: sent handshake C160 S170
+Server: received handshake C160 S170
 Sender started on host dada
 Sender: sent frame 0
 Sender: received ACK 0

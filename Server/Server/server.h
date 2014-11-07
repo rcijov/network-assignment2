@@ -11,6 +11,8 @@
 #include <process.h>
 #include "Headers\dirent.h"
 
+#define STIMER 0
+#define UTIMER 300000
 
 #define PORT1 5001
 #define PORT2 7001
@@ -41,7 +43,7 @@ typedef struct {
 	unsigned int snwseq : SEQUENCE_WIDTH;
 	int buffer_length;
 	char buffer[MAX_FRAME_SIZE];
-} MessageFrame;
+} Frame;
 
 typedef struct {
 	PacketType packet_type;
