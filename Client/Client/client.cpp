@@ -44,15 +44,14 @@ int SendFileAck(int sock, Acknowledgment * ack)
 	return sendto(sock, (const char*)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, sizeof(sa_in));
 }
 
-
 ReceiveResult Receive(int sock, MessageFrame * ptr_message_frame, ThreeWayHandshake * ptr_handshake, Acknowledgment * ack)
 {
 	fd_set readfds;
 	FD_ZERO(&readfds);
 	FD_SET(sock, &readfds);
 	int bytes_recvd;
-	int outfds = select(1, &readfds, NULL, NULL, &timeouts);
-	switch (outfds)
+	int output = select(1, &readfds, NULL, NULL, &timeouts);
+	switch (output)
 	{
 	case 0:
 		return TIMEOUT; break;
@@ -408,8 +407,23 @@ void waitForHandshake()
 	} while (Receive(sock, nullptr, &handshake, nullptr) != INCOMING_PACKET);
 }
 
-void run()
+unsigned long ResolveName(char name[])
 {
+	struct hostent *host;
+	if ((host = gethostbyname(name)) == NULL)
+		err_sys("gethostbyname() failed");
+	return *((unsigned long *)host->h_addr_list[0]);
+}
+
+int main(int argc, char* argv[])
+{
+	// set timeout
+	timeouts.tv_sec = 0;
+	timeouts.tv_usec = 300000;
+
+	// open log file
+	fout.open("client_log.txt");
+	
 	char server[INPUT_LENGTH];
 	unsigned long filename_length = (unsigned long)FILENAME_LENGTH;
 	bool bContinue = true;
@@ -446,31 +460,14 @@ void run()
 			setHandshake(direction);
 
 			waitForHandshake();
-			
+
 			setHandshakeType(handshake.type);
-			
+
 		}
 		cout << "Closing client socket." << endl;
 		fout << "Closing client socket." << endl;
 		closesocket(sock);
 	}
-}
-
-unsigned long ResolveName(char name[])
-{
-	struct hostent *host;
-	if ((host = gethostbyname(name)) == NULL)
-		err_sys("gethostbyname() failed");
-	return *((unsigned long *)host->h_addr_list[0]);
-}
-
-int main(int argc, char* argv[])
-{
-	timeouts.tv_sec = 0;
-	timeouts.tv_usec = 300000;
-
-	fout.open("client_log.txt");
-	run();
 
 	fout.close();
 	WSACleanup();

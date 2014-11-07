@@ -1,20 +1,20 @@
-Server: received handshake C175
+Server: received handshake C198
 Server: user "d" on host "dada" requests GET file: ""
-Server: sent handshake C175 S218
-Server: received handshake C175 S218
+Server: sent handshake C198 S240
+Server: received handshake C198 S240
 Sender started on host dada
-Sender: sent frame 1
-Sender: received ACK 1
+Sender: sent frame 0
+Sender: received ACK 0
 Sender: file transfer complete
 Sender: number of packets sent: 1
 Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 161
 
-Server: received handshake C218
+Server: received handshake C240
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C218 S228
-Server: received handshake C218 S228
+Server: sent handshake C240 S254
+Server: received handshake C240 S254
 Sender started on host dada
 Sender: sent frame 0
 Sender: received ACK 0
@@ -24,26 +24,26 @@ Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 0
 
-Server: received handshake C228
+Server: received handshake C254
 Server: user "d" on host "dada" requests PUT file: "test.txt"
-Server: sent handshake C228 S244
-Server: received handshake C228 S244
+Server: sent handshake C254 S11
+Server: received handshake C254 S11
 Receiver started on host dada
-Receiver: received frame 0
-Receiver: sent ack 0
+Receiver: received frame 1
+Receiver: sent ack 1
 Receiver: file transfer complete
 Receiver: number of packets sent: 1
 Receiver: number of packets sent (needed): 1
 Receiver: number of bytes received: 272
 Receiver: number of bytes written: 0
 
-Server: received handshake C244
+Server: received handshake C11
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C244 S247
-Server: received handshake C244 S247
+Server: sent handshake C11 S17
+Server: received handshake C11 S17
 Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
+Sender: sent frame 1
+Sender: received ACK 1
 Sender: file transfer complete
 Sender: number of packets sent: 1
 Sender: number of packets sent (needed): 1

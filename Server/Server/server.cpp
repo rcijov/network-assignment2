@@ -293,6 +293,55 @@ bool ReceiveFile(int sock, char * filename, char * receiving_hostname, int serve
 	}
 }
 
+void setHandshake(Direction direction)
+{
+	switch (direction)
+	{
+	case GET:
+		cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
+		fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
+		if (FileExists(handshake.filename))
+			handshake.type = ACK_CLIENT_NUM;
+		else
+		{
+			handshake.type = FILE_NOT_EXIST;
+			cout << "Server: requested file does not exist." << endl;
+			fout << "Server: requested file does not exist." << endl;
+		}
+		break;
+
+	case PUT:
+		cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests PUT file: \"" << handshake.filename << "\"" << endl;
+		fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests PUT file: \"" << handshake.filename << "\"" << endl;
+		handshake.type = ACK_CLIENT_NUM;
+		break;
+
+	case LIST:
+		cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
+		fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
+		handshake.type = ACK_CLIENT_NUM;
+		break;
+
+	default:
+		handshake.type = INVALID;
+		cout << "Server: invalid request." << endl;
+		fout << "Server: invalid request." << endl;
+		break;
+	}
+}
+
+void waitForHandshake()
+{
+	do {
+		if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
+			err_sys("Error in sending packet.");
+
+		cout << "Server: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+		fout << "Server: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+
+	} while (Receive(sock, nullptr, &handshake, nullptr) != INCOMING_PACKET || handshake.type != ACK_SERVER_NUM);
+}
+
 void run()
 {
 	if (WSAStartup(0x0202, &wsadata) != 0)
@@ -304,10 +353,9 @@ void run()
 	if (gethostname(server_name, HOSTNAME_LENGTH) != 0)
 		err_sys("Server gethostname() error.");
 
-	printf("=========== ftpd_server v0.2 ===========\n");
 	printf("Server started on host [%s]\n", server_name);
 	printf("Awaiting request for file transfer...\n", server_name);
-	printf("========================================\n\n");
+	printf("\n");
 
 	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		err_sys("socket() failed");
@@ -328,39 +376,7 @@ void run()
 		cout << "Server: received handshake C" << handshake.client_number << endl;
 		fout << "Server: received handshake C" << handshake.client_number << endl;
 
-		if (handshake.direction == GET)
-		{
-			cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
-			fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
-
-			if (FileExists(handshake.filename))
-				handshake.type = ACK_CLIENT_NUM;
-			else
-			{
-				handshake.type = FILE_NOT_EXIST;
-				cout << "Server: requested file does not exist." << endl;
-				fout << "Server: requested file does not exist." << endl;
-			}
-		}
-		else if (handshake.direction == LIST)
-		{
-			cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
-			fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests GET file: \"" << handshake.filename << "\"" << endl;
-
-			handshake.type = ACK_CLIENT_NUM;
-		}
-		else if (handshake.direction == PUT)
-		{
-			cout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests PUT file: \"" << handshake.filename << "\"" << endl;
-			fout << "Server: user \"" << handshake.username << "\" on host \"" << handshake.hostname << "\" requests PUT file: \"" << handshake.filename << "\"" << endl;
-			handshake.type = ACK_CLIENT_NUM;
-		}
-		else
-		{
-			handshake.type = INVALID;
-			cout << "Server: invalid request." << endl;
-			fout << "Server: invalid request." << endl;
-		}
+		setHandshake(handshake.direction);
 
 		if (handshake.type != ACK_CLIENT_NUM)
 		{
@@ -376,14 +392,7 @@ void run()
 			random = rand() % 256;
 			handshake.server_number = random;
 
-			do {
-				if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
-					err_sys("Error in sending packet.");
-
-				cout << "Server: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-				fout << "Server: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-
-			} while (Receive(sock, nullptr,&handshake,nullptr) != INCOMING_PACKET || handshake.type != ACK_SERVER_NUM);
+			waitForHandshake();
 
 			cout << "Server: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
 			fout << "Server: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
