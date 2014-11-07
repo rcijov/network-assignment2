@@ -29,25 +29,6 @@ long GetFileSize(char * filename)
 	return stat_buf.st_size;
 }
 
-ReceiveResult ReceiveFileAck(int sock, Acknowledgment * ack)
-{
-	fd_set readfds;
-	FD_ZERO(&readfds);
-	FD_SET(sock, &readfds);
-	int bytes_recvd;
-	int outfds = select(1, &readfds, NULL, NULL, &timeouts);
-	switch (outfds)
-	{
-	case 0:
-		return TIMEOUT; break;
-	case 1:
-		bytes_recvd = recvfrom(sock, (char *)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, &sa_in_size);
-		return INCOMING_PACKET; break;
-	default:
-		return RECEIVE_ERROR; break;
-	}
-}
-
 int SendRequest(int sock, ThreeWayHandshake * ptr_handshake, struct sockaddr_in * sa_in)
 {
 	return sendto(sock, (const char *)ptr_handshake, sizeof(*ptr_handshake), 0, (struct sockaddr *)sa_in, sizeof(*sa_in));
@@ -64,7 +45,7 @@ int SendFileAck(int sock, Acknowledgment * ack)
 }
 
 
-ReceiveResult ReceiveFrame(int sock, MessageFrame * ptr_message_frame)
+ReceiveResult Receive(int sock, MessageFrame * ptr_message_frame, ThreeWayHandshake * ptr_handshake, Acknowledgment * ack)
 {
 	fd_set readfds;
 	FD_ZERO(&readfds);
@@ -76,7 +57,18 @@ ReceiveResult ReceiveFrame(int sock, MessageFrame * ptr_message_frame)
 	case 0:
 		return TIMEOUT; break;
 	case 1:
-		bytes_recvd = recvfrom(sock, (char *)ptr_message_frame, sizeof(*ptr_message_frame), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		if (ptr_message_frame != nullptr)
+		{
+			bytes_recvd = recvfrom(sock, (char *)ptr_message_frame, sizeof(*ptr_message_frame), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		}
+		else if (ptr_handshake != nullptr)
+		{
+			bytes_recvd = recvfrom(sock, (char *)ptr_handshake, sizeof(*ptr_handshake), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		}
+		else if (ack != nullptr)
+		{
+			bytes_recvd = recvfrom(sock, (char *)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, &sa_in_size);
+		}
 		return INCOMING_PACKET; break;
 	default:
 		return RECEIVE_ERROR; break;
@@ -141,7 +133,7 @@ bool SendFile(int sock, char * filename, char * sending_hostname, int server_num
 					break;
 				}
 
-			} while (ReceiveFileAck(sock, &ack) != INCOMING_PACKET || ack.number != sequence_number);
+			} while (Receive(sock, nullptr, nullptr, &ack) != INCOMING_PACKET || ack.number != sequence_number);
 
 			if (bMaxAttempts)
 			{
@@ -202,7 +194,7 @@ bool ReceiveFile(int sock, char * filename, char * receiving_hostname, int clien
 	{
 		while (1)
 		{
-			while (ReceiveFrame(sock, &frame) != INCOMING_PACKET) { ; }
+			while (Receive(sock, &frame, nullptr, nullptr) != INCOMING_PACKET) { ; }
 
 			bytes_received += sizeof(frame);
 
@@ -282,25 +274,6 @@ bool ReceiveFile(int sock, char * filename, char * receiving_hostname, int clien
 		cout << "Receiver: problem opening the file." << endl;
 		fout << "Receiver: problem opening the file." << endl;
 		return false;
-	}
-}
-
-ReceiveResult ReceiveResponse(int sock, ThreeWayHandshake * ptr_handshake)
-{
-	fd_set readfds;
-	FD_ZERO(&readfds);
-	FD_SET(sock, &readfds);
-	int bytes_recvd;
-	int outfds = select(1, &readfds, NULL, NULL, &timeouts);
-	switch (outfds)
-	{
-	case 0:
-		return TIMEOUT; break;
-	case 1:
-		bytes_recvd = recvfrom(sock, (char *)ptr_handshake, sizeof(*ptr_handshake), 0, (struct sockaddr*)&sa_in, &sa_in_size);
-		return INCOMING_PACKET; break;
-	default:
-		return RECEIVE_ERROR; break;
 	}
 }
 
@@ -400,7 +373,7 @@ void run()
 				cout << "Client: sent handshake C" << handshake.client_number << endl;
 				fout << "Client: sent handshake C" << handshake.client_number << endl;
 
-			} while (ReceiveResponse(sock, &handshake) != INCOMING_PACKET);
+			} while (Receive(sock, nullptr, &handshake, nullptr) != INCOMING_PACKET);
 
 			if (handshake.type == FILE_NOT_EXIST)
 			{

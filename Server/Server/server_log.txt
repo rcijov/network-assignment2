@@ -1,7 +1,7 @@
 Server: received handshake C-858993460
 Server: user "d" on host "dada" requests GET file: "面面面面面面面面面面面面面面面面面面面面"
-Server: sent handshake C-858993460 S19
-Server: received handshake C-858993460 S19
+Server: sent handshake C-858993460 S86
+Server: received handshake C-858993460 S86
 Sender started on host dada
 Sender: sent frame 0
 Sender: received ACK 0
@@ -13,8 +13,8 @@ Sender: number of bytes read: 161
 
 Server: received handshake C-858993460
 Server: user "d" on host "dada" requests GET file: "面面面面面面面面面面面面面面面面面面面面"
-Server: sent handshake C-858993460 S29
-Server: received handshake C-858993460 S29
+Server: sent handshake C-858993460 S93
+Server: received handshake C-858993460 S93
 Sender started on host dada
 Sender: sent frame 0
 Sender: received ACK 0
@@ -26,8 +26,8 @@ Sender: number of bytes read: 161
 
 Server: received handshake C-858993460
 Server: user "d" on host "dada" requests GET file: "面面面面面面面面面面面面面面面面面面面面"
-Server: sent handshake C-858993460 S35
-Server: received handshake C-858993460 S35
+Server: sent handshake C-858993460 S99
+Server: received handshake C-858993460 S99
 Sender started on host dada
 Sender: sent frame 0
 Sender: received ACK 0
@@ -37,49 +37,10 @@ Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 161
 
-Server: received handshake C-858993460
-Server: user "d" on host "dada" requests GET file: "面面面面面面面面面面面面面面面面面面面面"
-Server: sent handshake C-858993460 S42
-Server: received handshake C-858993460 S42
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 161
-
-Server: received handshake C-858993460
-Server: user "d" on host "dada" requests GET file: "面面面面面面面面面面面面面面面面面面面面"
-Server: sent handshake C-858993460 S48
-Server: received handshake C-858993460 S48
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 161
-
-Server: received handshake C-858993460
-Server: user "d" on host "dada" requests GET file: "面面面面面面面面面面面面面面面面面面面面"
-Server: sent handshake C-858993460 S55
-Server: received handshake C-858993460 S55
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 161
-
-Server: received handshake C55
+Server: received handshake C99
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C55 S68
-Server: received handshake C55 S68
+Server: sent handshake C99 S109
+Server: received handshake C99 S109
 Sender started on host dada
 Sender: sent frame 1
 Sender: received ACK 1
@@ -89,49 +50,10 @@ Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 0
 
-Server: received handshake C68
-Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C68 S78
-Server: received handshake C68 S78
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 161
-
-Server: received handshake C78
-Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C78 S94
-Server: received handshake C78 S94
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 161
-
-Server: received handshake C94
-Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C94 S107
-Server: received handshake C94 S107
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 0
-
-Server: received handshake C107
+Server: received handshake C109
 Server: user "d" on host "dada" requests PUT file: "test.txt"
-Server: sent handshake C107 S120
-Server: received handshake C107 S120
+Server: sent handshake C109 S122
+Server: received handshake C109 S122
 Receiver started on host dada
 Receiver: received frame 0
 Receiver: sent ack 0
@@ -141,10 +63,10 @@ Receiver: number of packets sent (needed): 1
 Receiver: number of bytes received: 272
 Receiver: number of bytes written: 0
 
-Server: received handshake C120
+Server: received handshake C122
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C120 S130
-Server: received handshake C120 S130
+Server: sent handshake C122 S135
+Server: received handshake C122 S135
 Sender started on host dada
 Sender: sent frame 0
 Sender: received ACK 0
@@ -154,42 +76,29 @@ Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 0
 
-Server: received handshake C130
+Server: received handshake C135
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C130 S140
-Server: received handshake C130 S140
+Server: sent handshake C135 S145
+Server: received handshake C135 S145
 Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
+Sender: sent frame 1
+Sender: received ACK 1
 Sender: file transfer complete
 Sender: number of packets sent: 1
 Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 161
 
-Server: received handshake C140
+Server: received handshake C145
 Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C140 S162
-Server: received handshake C140 S162
+Server: sent handshake C145 S148
+Server: received handshake C145 S148
 Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
+Sender: sent frame 1
+Sender: received ACK 1
 Sender: file transfer complete
 Sender: number of packets sent: 1
 Sender: number of packets sent (needed): 1
 Sender: number of bytes sent: 272
 Sender: number of bytes read: 161
-
-Server: received handshake C166
-Server: user "d" on host "dada" requests GET file: "test.txt"
-Server: sent handshake C166 S195
-Server: received handshake C166 S195
-Sender started on host dada
-Sender: sent frame 0
-Sender: received ACK 0
-Sender: file transfer complete
-Sender: number of packets sent: 1
-Sender: number of packets sent (needed): 1
-Sender: number of bytes sent: 272
-Sender: number of bytes read: 0
 
