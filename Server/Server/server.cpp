@@ -342,21 +342,33 @@ void waitForHandshake()
 	} while (Receive(sock, nullptr, &handshake, nullptr) != INCOMING_PACKET || handshake.type != ACK_SERVER_NUM);
 }
 
-void run()
+void HandshakeFactory(Handshake handshake)
 {
-	if (WSAStartup(0x0202, &wsadata) != 0)
+	switch (handshake.direction)
 	{
-		WSACleanup();
-		err_sys("Error in starting WSAStartup()\n");
+	case GET:
+		if (!SendFile(sock, handshake.filename, server_name, handshake.client_number, false))
+			err_sys("An error occurred while sending the file.");
+		break;
+
+	case LIST:
+		strcpy(handshake.filename, "List/list.txt");
+		if (!SendFile(sock, handshake.filename, server_name, handshake.client_number, true))
+			err_sys("An error occurred while sending the file.");
+		break;
+
+	case PUT:
+		if (!ReceiveFile(sock, handshake.filename, server_name, handshake.server_number))
+			err_sys("An error occurred while receiving the file.");
+		break;
+
+	default:
+		break;
 	}
+}
 
-	if (gethostname(server_name, HOSTNAME_LENGTH) != 0)
-		err_sys("Server gethostname() error.");
-
-	printf("Server started on host [%s]\n", server_name);
-	printf("Awaiting request for file transfer...\n", server_name);
-	printf("\n");
-
+void sockConnection()
+{
 	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		err_sys("socket() failed");
 
@@ -368,64 +380,38 @@ void run()
 
 	if (bind(sock, (LPSOCKADDR)&sa, sizeof(sa)) < 0)
 		err_sys("Socket binding error");
+}
 
-	while (true)
+void handshakeType()
+{
+
+	if (handshake.type != ACK_CLIENT_NUM)
 	{
-		while (Receive(sock, nullptr,&handshake,nullptr) != INCOMING_PACKET || handshake.type != CLIENT_REQ) { ; }
+		if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
+			err_sys("Error in sending packet.");
 
-		cout << "Server: received handshake C" << handshake.client_number << endl;
-		fout << "Server: received handshake C" << handshake.client_number << endl;
+		cout << "Server: sent error message to client. " << endl;
+		fout << "Server: sent error message to client. " << endl;
+	}
+	else if (handshake.type == ACK_CLIENT_NUM)
+	{
+		srand((unsigned)time(NULL));
+		random = rand() % 256;
+		handshake.server_number = random;
 
-		setHandshake(handshake.direction);
+		waitForHandshake();
 
-		if (handshake.type != ACK_CLIENT_NUM)
+		cout << "Server: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+		fout << "Server: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+
+		if (handshake.type == ACK_SERVER_NUM)
 		{
-			if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
-				err_sys("Error in sending packet.");
-
-			cout << "Server: sent error message to client. " << endl;
-			fout << "Server: sent error message to client. " << endl;
+			HandshakeFactory(handshake);
 		}
-		else if (handshake.type == ACK_CLIENT_NUM)
+		else
 		{
-			srand((unsigned)time(NULL));
-			random = rand() % 256;
-			handshake.server_number = random;
-
-			waitForHandshake();
-
-			cout << "Server: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-			fout << "Server: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-
-			if (handshake.type == ACK_SERVER_NUM)
-			{
-				switch (handshake.direction)
-				{
-				case GET:
-					if (!SendFile(sock, handshake.filename, server_name, handshake.client_number, false))
-						err_sys("An error occurred while sending the file.");
-					break;
-				
-				case LIST:
-					strcpy(handshake.filename, "List/list.txt");
-					if (!SendFile(sock, handshake.filename, server_name, handshake.client_number, true))
-						err_sys("An error occurred while sending the file.");
-					break;
-
-				case PUT:
-					if (!ReceiveFile(sock, handshake.filename, server_name, handshake.server_number))
-						err_sys("An error occurred while receiving the file.");
-					break;
-
-				default:
-					break;
-				}
-			}
-			else
-			{
-				cout << "Handshake error!" << endl;
-				fout << "Handshake error!" << endl;
-			}
+			cout << "Handshake error!" << endl;
+			fout << "Handshake error!" << endl;
 		}
 	}
 }
@@ -440,11 +426,37 @@ unsigned long ResolveName(char name[])
 
 int main(void)
 {
-	timeouts.tv_sec = STIMER;
-	timeouts.tv_usec = UTIMER;
+	timeouts.tv_sec = 0;
+	timeouts.tv_usec = 300000;
 
 	fout.open("server_log.txt");
-	run();
+	
+	if (WSAStartup(0x0202, &wsadata) != 0)
+	{
+		WSACleanup();
+		err_sys("Error in starting WSAStartup()\n");
+	}
+
+	if (gethostname(server_name, HOSTNAME_LENGTH) != 0)
+		err_sys("Server gethostname() error.");
+
+	printf("Server started on host [%s]\n", server_name);
+	printf("Awaiting request for file transfer...\n", server_name);
+	printf("\n");
+
+	sockConnection();
+
+	while (true)
+	{
+		while (Receive(sock, nullptr, &handshake, nullptr) != INCOMING_PACKET || handshake.type != CLIENT_REQ) { ; }
+
+		cout << "Server: received handshake C" << handshake.client_number << endl;
+		fout << "Server: received handshake C" << handshake.client_number << endl;
+
+		setHandshake(handshake.direction);
+
+		handshakeType();
+	}
 
 	fout.close();
 	WSACleanup();
