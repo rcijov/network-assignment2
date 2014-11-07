@@ -1,26 +1,103 @@
-﻿Build started 11/7/2014 4:05:38 AM.
+﻿Build started 11/7/2014 10:48:22 AM.
      1>Project "C:\Users\Cijov\Desktop\net2\Client\Client\Client.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt client.cpp
          client.cpp
-     1>c:\users\cijov\desktop\net2\client\client\client.cpp(90): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 c:\program files (x86)\microsoft visual studio 12.0\vc\include\stdio.h(211) : see declaration of 'fopen'
-     1>c:\users\cijov\desktop\net2\client\client\client.cpp(190): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 c:\program files (x86)\microsoft visual studio 12.0\vc\include\stdio.h(211) : see declaration of 'fopen'
-     1>c:\users\cijov\desktop\net2\client\client\client.cpp(308): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 c:\program files (x86)\microsoft visual studio 12.0\vc\include\string.h(112) : see declaration of 'strcpy'
-     1>c:\users\cijov\desktop\net2\client\client\client.cpp(309): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 c:\program files (x86)\microsoft visual studio 12.0\vc\include\string.h(112) : see declaration of 'strcpy'
-     1>c:\users\cijov\desktop\net2\client\client\client.cpp(310): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 c:\program files (x86)\microsoft visual studio 12.0\vc\include\string.h(112) : see declaration of 'strcpy'
-     1>c:\users\cijov\desktop\net2\client\client\client.cpp(357): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 c:\program files (x86)\microsoft visual studio 12.0\vc\include\string.h(112) : see declaration of 'strcpy'
-     1>c:\users\cijov\desktop\net2\client\client\client.cpp(427): warning C4101: 'server' : unreferenced local variable
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Cijov\Desktop\net2\Client\Debug\Client.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Cijov\Desktop\net2\Client\Debug\Client.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Cijov\Desktop\net2\Client\Debug\Client.lib" /MACHINE:X86 Debug\client.obj
-         Client.vcxproj -> C:\Users\Cijov\Desktop\net2\Client\Debug\Client.exe
-     1>Done Building Project "C:\Users\Cijov\Desktop\net2\Client\Client\Client.vcxproj" (Build target(s)).
+     1>c:\users\cijov\desktop\net2\client\client\client.h(61): error C2146: syntax error : missing ';' before identifier 'handshake'
+     1>c:\users\cijov\desktop\net2\client\client\client.h(61): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(112): error C3861: 'SendFrame': identifier not found
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(195): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(195): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(196): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(196): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(197): error C3861: 'SendRequest': identifier not found
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(199): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(199): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(200): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(200): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(210): error C3861: 'SendFileAck': identifier not found
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(219): error C3861: 'SendFileAck': identifier not found
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(301): error C2228: left of '.hostname' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(302): error C2228: left of '.username' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(303): error C2228: left of '.filename' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(318): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(319): error C2228: left of '.type' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(320): error C2228: left of '.packet_type' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(326): error C2228: left of '.direction' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(327): error C2228: left of '.direction' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(328): error C2228: left of '.direction' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(331): error C2228: left of '.filename' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(331): error C2228: left of '.direction' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(342): error C2228: left of '.filename' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(342): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(342): error C2660: 'ReceiveFile' : function does not take 3 arguments
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(346): error C2228: left of '.filename' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(346): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(346): error C2660: 'SendFile' : function does not take 2 arguments
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(350): error C2228: left of '.filename' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(351): error C2228: left of '.filename' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(351): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(351): error C2660: 'ReceiveFile' : function does not take 3 arguments
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(374): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(374): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(375): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(375): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(377): error C2228: left of '.type' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(378): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(379): error C3861: 'SendRequest': identifier not found
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(382): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(382): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(383): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(383): error C2228: left of '.server_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(385): error C2228: left of '.direction' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(394): error C3861: 'SendRequest': identifier not found
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(397): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(398): error C2228: left of '.client_number' must have class/struct/union
+                 type is 'int'
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(400): error C2664: 'ReceiveResult Receive(int,MessageFrame *,Handshake *,Acknowledgment *)' : cannot convert argument 3 from 'int *' to 'Handshake *'
+                 Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or function-style cast
+     1>c:\users\cijov\desktop\net2\client\client\client.cpp(457): error C2228: left of '.type' must have class/struct/union
+                 type is 'int'
+     1>Done Building Project "C:\Users\Cijov\Desktop\net2\Client\Client\Client.vcxproj" (Build target(s)) -- FAILED.
 
-Build succeeded.
+Build FAILED.
 
-Time Elapsed 00:00:06.02
+Time Elapsed 00:00:03.35

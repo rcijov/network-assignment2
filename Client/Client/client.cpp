@@ -29,22 +29,15 @@ long GetFileSize(char * filename)
 	return stat_buf.st_size;
 }
 
-int SendRequest(int sock, ThreeWayHandshake * ptr_handshake, struct sockaddr_in * sa_in)
+int Send(int sock, Handshake * ptr_handshake, MessageFrame * ptr_message_frame, Acknowledgment * ack)
 {
-	return sendto(sock, (const char *)ptr_handshake, sizeof(*ptr_handshake), 0, (struct sockaddr *)sa_in, sizeof(*sa_in));
+	int bytes = (ptr_handshake != nullptr) ? sendto(sock, (const char *)ptr_handshake, sizeof(*ptr_handshake), 0, (struct sockaddr*)&sa_in, sizeof(sa_in)) :
+		(ptr_message_frame != nullptr ? sendto(sock, (const char*)ptr_message_frame, sizeof(*ptr_message_frame), 0, (struct sockaddr*)&sa_in, sizeof(sa_in)) :
+		sendto(sock, (const char*)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, sizeof(sa_in)));
+	return bytes;
 }
 
-int SendFrame(int sock, MessageFrame * ptr_message_frame)
-{
-	return sendto(sock, (const char*)ptr_message_frame, sizeof(*ptr_message_frame), 0, (struct sockaddr*)&sa_in, sizeof(sa_in));
-}
-
-int SendFileAck(int sock, Acknowledgment * ack)
-{
-	return sendto(sock, (const char*)ack, sizeof(*ack), 0, (struct sockaddr*)&sa_in, sizeof(sa_in));
-}
-
-ReceiveResult Receive(int sock, MessageFrame * ptr_message_frame, ThreeWayHandshake * ptr_handshake, Acknowledgment * ack)
+ReceiveResult Receive(int sock, MessageFrame * ptr_message_frame, Handshake * ptr_handshake, Acknowledgment * ack)
 {
 	fd_set readfds;
 	FD_ZERO(&readfds);

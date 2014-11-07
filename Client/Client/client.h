@@ -51,7 +51,7 @@ typedef struct {
 	char hostname[HOSTNAME_LENGTH];
 	char username[USERNAME_LENGTH];
 	char filename[FILENAME_LENGTH];
-} ThreeWayHandshake;
+} Handshake;
 
 int sock;
 struct sockaddr_in sa;
