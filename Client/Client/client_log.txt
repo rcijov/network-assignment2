@@ -1,6 +1,6 @@
-Client: sent handshake C88
-Client: received handshake C88 S137
-Client: sent handshake C88 S137
+Client: sent handshake C206
+Client: received handshake C206 S248
+Client: sent handshake C206 S248
 Receiver started on host dada
 Receiver: received frame 0
 Receiver: sent ACK 0
@@ -11,12 +11,12 @@ Receiver: number of bytes received: 272
 Receiver: number of bytes written: 161
 
 Closing client socket.
-Client: sent handshake C137
-Client: received handshake C137 S147
-Client: sent handshake C137 S147
+Client: sent handshake C248
+Client: received handshake C248 S2
+Client: sent handshake C248 S2
 Receiver started on host dada
-Receiver: received frame 1
-Receiver: sent ACK 1
+Receiver: received frame 0
+Receiver: sent ACK 0
 Receiver: file transfer complete
 Receiver: number of packets sent: 1
 Receiver: number of packets sent (needed): 1
@@ -24,12 +24,25 @@ Receiver: number of bytes received: 272
 Receiver: number of bytes written: 0
 
 Closing client socket.
-Client: sent handshake C147
-Client: received handshake C147 S157
-Client: sent handshake C147 S157
+Client: sent handshake C5
+Client: received handshake C5 S8
+Client: sent handshake C5 S8
+Receiver started on host dada
+Receiver: received frame 1
+Receiver: sent ACK 1
+Receiver: file transfer complete
+Receiver: number of packets sent: 1
+Receiver: number of packets sent (needed): 1
+Receiver: number of bytes received: 272
+Receiver: number of bytes written: 161
+
+Closing client socket.
+Client: sent handshake C8
+Client: received handshake C8 S18
+Client: sent handshake C8 S18
 Sender started on host dada
-Sender: sent frame 1
-Sender: received ACK 1
+Sender: sent frame 0
+Sender: received ACK 0
 Sender: file transfer complete
 Sender: number of packets sent: 1
 Sender: number of packets sent (needed): 1
@@ -37,9 +50,35 @@ Sender: number of bytes sent: 0
 Sender: number of bytes read: 0
 
 Closing client socket.
-Client: sent handshake C160
-Client: received handshake C160 S170
-Client: sent handshake C160 S170
+Client: sent handshake C18
+Client: received handshake C18 S25
+Client: sent handshake C18 S25
+Receiver started on host dada
+Receiver: received frame 0
+Receiver: sent ACK 0
+Receiver: file transfer complete
+Receiver: number of packets sent: 1
+Receiver: number of packets sent (needed): 1
+Receiver: number of bytes received: 272
+Receiver: number of bytes written: 161
+
+Closing client socket.
+Client: sent handshake C25
+Client: received handshake C25 S28
+Client: sent handshake C25 S28
+Receiver started on host dada
+Receiver: received frame 1
+Receiver: sent ACK 1
+Receiver: file transfer complete
+Receiver: number of packets sent: 1
+Receiver: number of packets sent (needed): 1
+Receiver: number of bytes received: 272
+Receiver: number of bytes written: 161
+
+Closing client socket.
+Client: sent handshake C28
+Client: received handshake C28 S34
+Client: sent handshake C28 S34
 Receiver started on host dada
 Receiver: received frame 0
 Receiver: sent ACK 0

@@ -17,8 +17,7 @@
 #define PORT1 5001
 #define PORT2 7001
 
-#define MAX_RETRIES 10
-
+#define MAX_TRIES 10
 #define INPUT_LENGTH    40
 #define HOSTNAME_LENGTH 40
 #define USERNAME_LENGTH 40
@@ -26,29 +25,29 @@
 #define MAX_FRAME_SIZE 256
 #define SEQUENCE_WIDTH 1
 
-typedef enum { GET = 1, PUT, LIST } Direction;
-typedef enum { TIMEOUT = 1, INCOMING_PACKET, RECEIVE_ERROR } ReceiveResult;
+typedef enum { GET = 1, PUT, LIST } Request;
+typedef enum { TIMEOUT = 1, INCOMING, RECEIVE_ERROR } Package;
 typedef enum { CLIENT_REQ = 1, ACK_CLIENT_NUM, ACK_SERVER_NUM, FILE_NOT_EXIST, INVALID } HandshakeType;
-typedef enum { INITIAL_DATA = 1, DATA, FINAL_DATA } MessageFrameHeader;
+typedef enum { INITIAL_DATA = 1, DATA, FINAL_DATA } Header;
 typedef enum { HANDSHAKE = 1, FRAME, FRAME_ACK } PacketType;
 
 typedef struct {
-	PacketType packet_type;
+	PacketType packetType;
 	int number;
 } Acknowledgment;
 
 typedef struct {
-	PacketType packet_type;
-	MessageFrameHeader header;
-	unsigned int snwseq : SEQUENCE_WIDTH;
+	PacketType packetType;
+	Header header;
+	unsigned int seqWidth : SEQUENCE_WIDTH;
 	int buffer_length;
 	char buffer[MAX_FRAME_SIZE];
 } Frame;
 
 typedef struct {
-	PacketType packet_type;
+	PacketType packetType;
 	HandshakeType type;
-	Direction direction;
+	Request request;
 	int client_number;
 	int server_number;
 	char hostname[HOSTNAME_LENGTH];
