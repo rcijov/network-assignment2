@@ -62,3 +62,9 @@ ThreeWayHandshake handshake;
 int random;
 WSADATA wsadata;
 std::ofstream fout;
+
+char filename[INPUT_LENGTH];
+char hostname[HOSTNAME_LENGTH]; 
+char username[USERNAME_LENGTH];
+char direction[INPUT_LENGTH];
+char remotehost[HOSTNAME_LENGTH];

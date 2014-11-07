@@ -277,10 +277,140 @@ bool ReceiveFile(int sock, char * filename, char * receiving_hostname, int clien
 	}
 }
 
+void socketConnection()
+{
+	if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+		err_sys("socket() failed");
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = htonl(INADDR_ANY);
+	sa.sin_port = htons(PORT1);
+
+	if (bind(sock, (LPSOCKADDR)&sa, sizeof(sa)) < 0)
+		err_sys("Socket binding error");
+}
+
+bool menu()
+{
+	cout << "Enter command     : "; cin >> direction;
+	if (strncmp(direction, "quit", 4) == 0)
+	{
+		return false;
+	}
+
+	if (!strncmp(direction, "list", 4) == 0)
+	{
+		cout << "Enter file name   : "; cin >> filename; cout << endl;
+	}
+
+	cout << "Enter router host : "; cin >> remotehost;
+
+	strcpy(handshake.hostname, hostname);
+	strcpy(handshake.username, username);
+	strcpy(handshake.filename, filename);
+
+	return true;
+}
+
+void initiateConnection()
+{
+	struct hostent *rp;
+	rp = gethostbyname(remotehost);
+	memset(&sa_in, 0, sizeof(sa_in));
+	memcpy(&sa_in.sin_addr, rp->h_addr, rp->h_length);
+	sa_in.sin_family = rp->h_addrtype;
+	sa_in.sin_port = htons(PORT2);
+	sa_in_size = sizeof(sa_in);
+
+	handshake.client_number = random;
+	handshake.type = CLIENT_REQ;
+	handshake.packet_type = HANDSHAKE;
+}
+
+void setHandshake(char* direction)
+{
+
+	(strcmp(direction, "get") == 0) ? handshake.direction = GET :
+		((strcmp(direction, "put") == 0) ? handshake.direction = PUT :
+			((strcmp(direction, "list") == 0) ? handshake.direction = LIST : 
+				err_sys("Invalid direction. Use \"get\" or \"put\".")));
+	
+	if ((!FileExists(handshake.filename)) && (handshake.direction == PUT))
+	{
+			err_sys("File does not exist on client side.");
+	}
+}
+
+void HandshakeFactory(Direction direction)
+{
+	switch (direction)
+	{
+	case GET:
+		if (!ReceiveFile(sock, handshake.filename, hostname, handshake.client_number, false))
+			err_sys("An error occurred while receiving the file.");
+		break;
+	case PUT:
+		if (!SendFile(sock, handshake.filename, hostname, handshake.server_number))
+			err_sys("An error occurred while sending the file.");
+		break;
+	case LIST:
+		strcpy(handshake.filename, "List/list.txt");
+		if (!ReceiveFile(sock, handshake.filename, hostname, handshake.client_number, true))
+			err_sys("An error occurred while receiving the file.");
+		break;
+	default:
+		break;
+	}
+}
+
+void setHandshakeType(HandshakeType handshaketype)
+{
+	switch (handshaketype)
+	{
+	case FILE_NOT_EXIST:
+		cout << "File does not exist!" << endl;
+		fout << "Client: requested file does not exist!" << endl;
+		break;
+
+	case INVALID:
+		cout << "Invalid request." << endl;
+		fout << "Client: invalid request." << endl;
+		break;
+
+	case ACK_CLIENT_NUM:
+		cout << "Client: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+		fout << "Client: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+
+		handshake.type = ACK_SERVER_NUM;
+		int sequence_number = handshake.server_number % 2;
+		if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
+			err_sys("Error in sending packet.");
+
+		cout << "Client: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+		fout << "Client: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
+
+		HandshakeFactory(handshake.direction);
+		break;
+	}
+}
+
+void waitForHandshake()
+{
+	do
+	{
+		if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
+			err_sys("Error in sending packet.");
+
+		cout << "Client: sent handshake C" << handshake.client_number << endl;
+		fout << "Client: sent handshake C" << handshake.client_number << endl;
+
+	} while (Receive(sock, nullptr, &handshake, nullptr) != INCOMING_PACKET);
+}
+
 void run()
 {
-	char server[INPUT_LENGTH]; char filename[INPUT_LENGTH]; char direction[INPUT_LENGTH];
-	char hostname[HOSTNAME_LENGTH]; char username[USERNAME_LENGTH]; char remotehost[HOSTNAME_LENGTH];
+	char server[INPUT_LENGTH];
 	unsigned long filename_length = (unsigned long)FILENAME_LENGTH;
 	bool bContinue = true;
 
@@ -296,128 +426,29 @@ void run()
 	if (gethostname(hostname, (int)HOSTNAME_LENGTH) != 0)
 		err_sys("Cannot get the host name");
 
-	printf("=========== ftpd_client v0.2 ===========\n");
 	printf("User [%s] started client on host [%s]\n", username, hostname);
-	printf("To quit, type \"quit\" as server name.\n");
-	printf("========================================\n\n");
-
-
+	printf("To quit, type \"quit\" as server name.\n\n");
 
 	while (true)
 	{
 
-		if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-			err_sys("socket() failed");
-
-		memset(&sa, 0, sizeof(sa));
-		sa.sin_family = AF_INET;
-		sa.sin_addr.s_addr = htonl(INADDR_ANY);
-		sa.sin_port = htons(PORT1);
-
-		if (bind(sock, (LPSOCKADDR)&sa, sizeof(sa)) < 0)
-			err_sys("Socket binding error");
+		socketConnection();
 
 		srand((unsigned)time(NULL));
 		random = rand() % 256;
 
-		cout << "Enter command     : "; cin >> direction;
-		if (strncmp(direction, "quit", 4) == 0)
-			break;
-
-		if (!strncmp(direction, "list", 4) == 0)
-		{
-			cout << "Enter file name   : "; cin >> filename; cout << endl;
-		}
-
-		cout << "Enter router host : "; cin >> remotehost;
-
-		strcpy(handshake.hostname, hostname);
-		strcpy(handshake.username, username);
-		strcpy(handshake.filename, filename);
+		menu();
 
 		if (bContinue)
 		{
-			struct hostent *rp;
-			rp = gethostbyname(remotehost);
-			memset(&sa_in, 0, sizeof(sa_in));
-			memcpy(&sa_in.sin_addr, rp->h_addr, rp->h_length);
-			sa_in.sin_family = rp->h_addrtype;
-			sa_in.sin_port = htons(PORT2);
-			sa_in_size = sizeof(sa_in);
+			initiateConnection();
 
-			handshake.client_number = random;
-			handshake.type = CLIENT_REQ;
-			handshake.packet_type = HANDSHAKE;
+			setHandshake(direction);
 
-			if (strcmp(direction, "get") == 0)
-				handshake.direction = GET;
-			else if (strcmp(direction, "put") == 0)
-			{
-				if (!FileExists(handshake.filename))
-					err_sys("File does not exist on client side.");
-				else
-					handshake.direction = PUT;
-			}
-			else if (strcmp(direction, "list") == 0)
-			{
-				handshake.direction = LIST;
-			}
-			else
-				err_sys("Invalid direction. Use \"get\" or \"put\".");
-
-			do
-			{
-				if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
-					err_sys("Error in sending packet.");
-
-				cout << "Client: sent handshake C" << handshake.client_number << endl;
-				fout << "Client: sent handshake C" << handshake.client_number << endl;
-
-			} while (Receive(sock, nullptr, &handshake, nullptr) != INCOMING_PACKET);
-
-			if (handshake.type == FILE_NOT_EXIST)
-			{
-				cout << "File does not exist!" << endl;
-				fout << "Client: requested file does not exist!" << endl;
-			}
-			else if (handshake.type == INVALID)
-			{
-				cout << "Invalid request." << endl;
-				fout << "Client: invalid request." << endl;
-			}
-
-			if (handshake.type == ACK_CLIENT_NUM)
-			{
-				cout << "Client: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-				fout << "Client: received handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-
-				handshake.type = ACK_SERVER_NUM;
-				int sequence_number = handshake.server_number % 2;
-				if (SendRequest(sock, &handshake, &sa_in) != sizeof(handshake))
-					err_sys("Error in sending packet.");
-
-				cout << "Client: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-				fout << "Client: sent handshake C" << handshake.client_number << " S" << handshake.server_number << endl;
-
-				switch (handshake.direction)
-				{
-				case GET:
-					if (!ReceiveFile(sock, handshake.filename, hostname, handshake.client_number,false))
-						err_sys("An error occurred while receiving the file.");
-					break;
-				case PUT:
-					if (!SendFile(sock, handshake.filename, hostname, handshake.server_number))
-						err_sys("An error occurred while sending the file.");
-					break;
-				case LIST:
-					strcpy(handshake.filename, "List/list.txt");
-					if (!ReceiveFile(sock, handshake.filename, hostname, handshake.client_number,true))
-						err_sys("An error occurred while receiving the file.");
-					break;
-				default:
-					break;
-				}
-			}
+			waitForHandshake();
+			
+			setHandshakeType(handshake.type);
+			
 		}
 		cout << "Closing client socket." << endl;
 		fout << "Closing client socket." << endl;
